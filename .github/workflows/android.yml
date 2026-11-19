@@ -1,1 +1,73 @@
+name: Gerar APK Android
 
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'index.html'
+      - '.github/workflows/android.yml'
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Compilar Campo Minado
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código do repositório
+        uses: actions/checkout@v4
+
+      - name: Verificar arquivo HTML
+        run: |
+          if [ ! -f index.html ]; then
+            echo 'ERRO: index.html não encontrado na raiz do repositório.'
+            echo 'Envie o arquivo index.html do Campo Minado para o GitHub e execute novamente.'
+            exit 1
+          fi
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Criar projeto Android com Capacitor
+        run: |
+          mkdir -p www
+          cp index.html www/index.html
+          npm init -y
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npx cap init "Campo Minado" "br.com.campominado.app" --web-dir=www
+          npx cap add android
+          npx cap sync android
+
+      - name: Compilar APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Disponibilizar APK para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: Campo-Minado-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publicar APK em Releases
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Campo Minado ${{ github.ref_name }}
+          generate_release_notes: true
