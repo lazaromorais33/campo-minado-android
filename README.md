@@ -55,3 +55,8 @@ Antes de distribuir amplamente, configure uma chave de assinatura de produção 
 - Android Gradle Plugin / Java 17
 
 Documentação: https://capacitorjs.com/docs
+
+
+## Ícone do aplicativo
+
+O ícone realista está em `assets/icon.png`. Durante a compilação automática, o workflow gera os ícones Android para diferentes densidades e o ícone adaptativo. Para trocar o ícone futuramente, substitua `assets/icon.png` por outra imagem quadrada de alta resolução, mantendo o mesmo caminho e nome.
