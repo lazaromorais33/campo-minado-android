@@ -60,3 +60,8 @@ Documentação: https://capacitorjs.com/docs
 ## Ícone do aplicativo
 
 O ícone realista está em `assets/icon.png`. Durante a compilação automática, o workflow gera os ícones Android para diferentes densidades e o ícone adaptativo. Para trocar o ícone futuramente, substitua `assets/icon.png` por outra imagem quadrada de alta resolução, mantendo o mesmo caminho e nome.
+
+
+## Correção da geração do ícone
+
+O workflow configura Python e Pillow, cria a pasta Android, gera os ícones (PNG e adaptativos) e só então sincroniza e compila o projeto. O arquivo `scripts/generate-icons.py` precisa permanecer no repositório junto de `assets/icon.png`.
