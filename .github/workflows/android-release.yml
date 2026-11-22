@@ -27,22 +27,16 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Configurar Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
       - name: Instalar dependências Node
         run: npm install
-
-      - name: Instalar Pillow
-        run: python -m pip install --upgrade pillow
 
       - name: Criar projeto Android
         run: npx cap add android
 
-      - name: Gerar ícones Android
-        run: python scripts/generate-icons.py
+      # --- PASSO DO ÍCONE ---
+      # Isso gera os ícones automaticamente baseado na imagem 'icone.png' na raiz
+      - name: Gerar Ícones Android
+        run: npx @capacitor/assets generate --android
 
       - name: Sincronizar aplicativo HTML
         run: npx cap sync android
