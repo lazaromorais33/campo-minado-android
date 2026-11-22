@@ -1,0 +1,680 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#071b17">
+<title>Campo Minado</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: #071b17;
+    color: white;
+}
+
+body {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+header {
+    text-align: center;
+    padding: 8px 0;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 25px;
+    color: #65e6a5;
+}
+
+header p {
+    margin: 5px 0;
+    font-size: 12px;
+    color: #9bb9ad;
+}
+
+.top-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 8px 0;
+}
+
+.info {
+    flex: 1;
+    background: #12332a;
+    border: 1px solid #285343;
+    border-radius: 12px;
+    text-align: center;
+    padding: 9px 4px;
+}
+
+.info small {
+    display: block;
+    color: #9bb9ad;
+    font-size: 10px;
+}
+
+.info strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 19px;
+}
+
+.controls {
+    display: flex;
+    gap: 7px;
+    margin-bottom: 8px;
+}
+
+button, select {
+    border: none;
+    border-radius: 10px;
+    padding: 11px 8px;
+    font-weight: bold;
+    font-size: 12px;
+    color: white;
+    background: #174b39;
+}
+
+select {
+    flex: 1;
+    min-width: 0;
+}
+
+button {
+    cursor: pointer;
+}
+
+#restart {
+    background: #168b59;
+}
+
+.modes {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.modes button {
+    flex: 1;
+    background: #15372e;
+    border: 1px solid #315c4b;
+}
+
+.modes button.active {
+    background: #168b59;
+    border-color: #65e6a5;
+}
+
+#board-area {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    overflow: hidden;
+}
+
+#board {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    gap: 2px;
+    touch-action: manipulation;
+}
+
+.cell {
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid #32624f;
+    border-radius: 4px;
+    background: #20513e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: clamp(8px, 2.8vw, 17px);
+    user-select: none;
+}
+
+.cell:active {
+    background: #347b5c;
+}
+
+.cell.open {
+    background: #b9d5c5;
+    border-color: #9bbca9;
+    color: #10291d;
+}
+
+.cell.flag {
+    background: #73512c;
+}
+
+.cell.mine {
+    background: #c83d3d;
+}
+
+.cell.n1 { color: #145bc1; }
+.cell.n2 { color: #168344; }
+.cell.n3 { color: #d52d2d; }
+.cell.n4 { color: #6339a8; }
+.cell.n5 { color: #8a3e21; }
+.cell.n6 { color: #087e87; }
+.cell.n7 { color: #202020; }
+.cell.n8 { color: #666666; }
+
+footer {
+    text-align: center;
+    color: #88a99a;
+    font-size: 10px;
+    padding: 7px 0 2px;
+}
+
+#message {
+    position: fixed;
+    left: 50%;
+    top: 45%;
+    transform: translate(-50%, -50%);
+    background: #12382b;
+    border: 1px solid #65e6a5;
+    border-radius: 18px;
+    padding: 22px;
+    width: 85%;
+    max-width: 320px;
+    text-align: center;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 10px 40px #0009;
+}
+
+#message h2 {
+    color: #65e6a5;
+}
+
+#message button {
+    background: #168b59;
+    padding: 12px 25px;
+}
+
+@media (max-height: 600px) {
+    header { padding: 2px 0; }
+    header h1 { font-size: 20px; }
+    .info { padding: 5px; }
+    .info strong { font-size: 16px; }
+    .controls, .modes { margin-bottom: 5px; }
+    body { padding: 5px; }
+    footer { padding: 3px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>💣 Campo Minado</h1>
+    <p>Encontre as minas e conquiste a vitória!</p>
+</header>
+
+<div class="top-info">
+    <div class="info">
+        <small>💣 MINAS</small>
+        <strong id="mines">30</strong>
+    </div>
+    <div class="info">
+        <small>⏱ TEMPO</small>
+        <strong id="time">000</strong>
+    </div>
+    <div class="info">
+        <small>🚩 BANDEIRAS</small>
+        <strong id="flags">0</strong>
+    </div>
+</div>
+
+<div class="controls">
+    <select id="difficulty">
+        <option value="0">Iniciante</option>
+        <option value="1" selected>Intermediário</option>
+        <option value="2">Avançado</option>
+    </select>
+    <button id="restart">🔄 Novo jogo</button>
+</div>
+
+<div class="modes">
+    <button id="digMode" class="active">⛏ ESCAVAR</button>
+    <button id="flagMode">🚩 BANDEIRA</button>
+</div>
+
+<div id="board-area">
+    <div id="board"></div>
+</div>
+
+<footer>Toque para escavar • Segure para colocar bandeira</footer>
+
+<div id="message">
+    <h2 id="messageTitle">Parabéns!</h2>
+    <p id="messageText"></p>
+    <button onclick="newGame()">Jogar novamente</button>
+</div>
+
+<script>
+// CONFIGURAÇÕES
+const levels = [
+    { rows: 18, cols: 12, mines: 30 },
+    { rows: 24, cols: 16, mines: 80 },
+    { rows: 30, cols: 20, mines: 150 }
+];
+
+let rows, cols, totalMines;
+let cells = [];
+let flags = 0;
+let opened = 0;
+let seconds = 0;
+let timer = null;
+let started = false;
+let gameOver = false;
+let mode = "dig";
+let firstClick = true;
+
+// SISTEMA DE SOM
+let audioContext;
+
+function tocarSom(tipo) {
+    try {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        if (audioContext.state === "suspended") {
+            audioContext.resume();
+        }
+
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        const now = audioContext.currentTime;
+
+        if (tipo === "escavar") {
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.09);
+
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.10);
+
+            osc.start(now);
+            osc.stop(now + 0.10);
+        }
+
+        if (tipo === "bandeira") {
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(650, now);
+            osc.frequency.exponentialRampToValueAtTime(950, now + 0.08);
+
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+            osc.start(now);
+            osc.stop(now + 0.15);
+        }
+
+        if (tipo === "explosao") {
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
+
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+            osc.start(now);
+            osc.stop(now + 0.35);
+        }
+    } catch (e) {
+        console.log("Som indisponível");
+    }
+}
+
+// ELEMENTOS
+const board = document.getElementById("board");
+const minesDisplay = document.getElementById("mines");
+const flagsDisplay = document.getElementById("flags");
+const timeDisplay = document.getElementById("time");
+const difficulty = document.getElementById("difficulty");
+
+document.getElementById("digMode").onclick = () => setMode("dig");
+document.getElementById("flagMode").onclick = () => setMode("flag");
+
+function setMode(value) {
+    mode = value;
+
+    document.getElementById("digMode").classList.toggle("active", value === "dig");
+    document.getElementById("flagMode").classList.toggle("active", value === "flag");
+}
+
+// NOVO JOGO
+function newGame() {
+    clearInterval(timer);
+
+    const level = levels[Number(difficulty.value)];
+
+    rows = level.rows;
+    cols = level.cols;
+    totalMines = level.mines;
+
+    cells = [];
+    flags = 0;
+    opened = 0;
+    seconds = 0;
+    started = false;
+    gameOver = false;
+    firstClick = true;
+
+    document.getElementById("message").style.display = "none";
+
+    minesDisplay.textContent = totalMines;
+    flagsDisplay.textContent = flags;
+    timeDisplay.textContent = "000";
+
+    board.innerHTML = "";
+    board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    board.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+    for (let i = 0; i < rows * cols; i++) {
+        const cell = {
+            mine: false,
+            open: false,
+            flag: false,
+            number: 0
+        };
+
+        cells.push(cell);
+
+        const element = document.createElement("div");
+        element.className = "cell";
+        element.dataset.index = i;
+
+        board.appendChild(element);
+    }
+}
+
+// POSIÇÕES VIZINHAS
+function neighbors(index) {
+    const result = [];
+    const r = Math.floor(index / cols);
+    const c = index % cols;
+
+    for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue;
+
+            const nr = r + dr;
+            const nc = c + dc;
+
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                result.push(nr * cols + nc);
+            }
+        }
+    }
+
+    return result;
+}
+
+// DISTRIBUIR MINAS
+function placeMines(safeIndex) {
+    let placed = 0;
+
+    while (placed < totalMines) {
+        const index = Math.floor(Math.random() * cells.length);
+
+        if (index === safeIndex || cells[index].mine) continue;
+
+        cells[index].mine = true;
+        placed++;
+    }
+
+    cells.forEach((cell, index) => {
+        if (!cell.mine) {
+            cell.number = neighbors(index)
+                .filter(n => cells[n].mine).length;
+        }
+    });
+}
+
+// TEMPORIZADOR
+function startTimer() {
+    if (started) return;
+
+    started = true;
+
+    timer = setInterval(() => {
+        seconds++;
+        timeDisplay.textContent = String(seconds).padStart(3, "0");
+    }, 1000);
+}
+
+// ESCAVAR
+function dig(index) {
+    if (gameOver) return;
+
+    const cell = cells[index];
+
+    if (cell.open || cell.flag) return;
+
+    if (firstClick) {
+        placeMines(index);
+        firstClick = false;
+    }
+
+    startTimer();
+
+    // Som ao escavar
+    tocarSom("escavar");
+
+    if (cell.mine) {
+        cell.open = true;
+        renderCell(index);
+        loseGame();
+        return;
+    }
+
+    reveal(index);
+    checkWin();
+}
+
+// REVELAR CASAS
+function reveal(index) {
+    const cell = cells[index];
+
+    if (cell.open || cell.flag || cell.mine) return;
+
+    cell.open = true;
+    opened++;
+
+    renderCell(index);
+
+    if (cell.number === 0) {
+        neighbors(index).forEach(n => {
+            if (!cells[n].open && !cells[n].mine) {
+                reveal(n);
+            }
+        });
+    }
+}
+
+// BANDEIRA
+function toggleFlag(index) {
+    if (gameOver) return;
+
+    const cell = cells[index];
+
+    if (cell.open) return;
+
+    if (!cell.flag && flags >= totalMines) return;
+
+    cell.flag = !cell.flag;
+    flags += cell.flag ? 1 : -1;
+
+    // Som ao colocar ou retirar bandeira
+    tocarSom("bandeira");
+
+    flagsDisplay.textContent = flags;
+    minesDisplay.textContent = totalMines - flags;
+
+    renderCell(index);
+}
+
+// DESENHAR CASA
+function renderCell(index) {
+    const cell = cells[index];
+    const element = board.children[index];
+
+    element.className = "cell";
+    element.textContent = "";
+
+    if (cell.flag) {
+        element.classList.add("flag");
+        element.textContent = "🚩";
+        return;
+    }
+
+    if (!cell.open) return;
+
+    element.classList.add("open");
+
+    if (cell.mine) {
+        element.classList.add("mine");
+        element.textContent = "💣";
+    } else if (cell.number > 0) {
+        element.classList.add("n" + cell.number);
+        element.textContent = cell.number;
+    }
+}
+
+// DERROTA
+function loseGame() {
+    gameOver = true;
+    clearInterval(timer);
+
+    tocarSom("explosao");
+
+    cells.forEach((cell, index) => {
+        if (cell.mine) {
+            cell.open = true;
+            renderCell(index);
+        }
+    });
+
+    showMessage("💥 Você perdeu!", "Você encontrou uma mina! Tente novamente.");
+}
+
+// VITÓRIA
+function checkWin() {
+    const safeCells = rows * cols - totalMines;
+
+    if (opened === safeCells) {
+        gameOver = true;
+        clearInterval(timer);
+
+        showMessage("🏆 Você venceu!", "Parabéns! Você encontrou todas as casas seguras.");
+    }
+}
+
+// MENSAGEM
+function showMessage(title, text) {
+    document.getElementById("messageTitle").textContent = title;
+    document.getElementById("messageText").textContent = text;
+    document.getElementById("message").style.display = "block";
+}
+
+// CLIQUES E TOQUE
+let pressTimer = null;
+let longPress = false;
+
+board.addEventListener("contextmenu", e => e.preventDefault());
+
+board.addEventListener("pointerdown", e => {
+    const element = e.target.closest(".cell");
+    if (!element) return;
+
+    const index = Number(element.dataset.index);
+    longPress = false;
+
+    if (e.pointerType === "touch") {
+        pressTimer = setTimeout(() => {
+            longPress = true;
+            toggleFlag(index);
+        }, 450);
+    }
+});
+
+board.addEventListener("pointerup", e => {
+    clearTimeout(pressTimer);
+
+    const element = e.target.closest(".cell");
+    if (!element) return;
+
+    const index = Number(element.dataset.index);
+
+    if (longPress) return;
+
+    if (mode === "flag") {
+        toggleFlag(index);
+    } else {
+        dig(index);
+    }
+});
+
+board.addEventListener("pointerleave", () => {
+    clearTimeout(pressTimer);
+});
+
+board.addEventListener("pointercancel", () => {
+    clearTimeout(pressTimer);
+});
+
+board.addEventListener("contextmenu", e => {
+    e.preventDefault();
+
+    const element = e.target.closest(".cell");
+    if (element) {
+        toggleFlag(Number(element.dataset.index));
+    }
+});
+
+board.addEventListener("pointerdown", e => {
+    if (e.pointerType === "mouse" && e.button === 2) {
+        const element = e.target.closest(".cell");
+        if (element) {
+            toggleFlag(Number(element.dataset.index));
+        }
+    }
+});
+
+// BOTÕES
+document.getElementById("restart").onclick = newGame;
+difficulty.onchange = newGame;
+
+// INICIAR
+newGame();
+</script>
+
+</body>
+</html>
